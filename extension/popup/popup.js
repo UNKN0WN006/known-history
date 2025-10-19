@@ -1,6 +1,3 @@
-// popup placeholder
-document.getElementById('app').textContent = 'History RecALI — popup';
-
 (async () => {
   const statusEl = document.getElementById('status');
   const btn = document.getElementById('summarize-btn');
