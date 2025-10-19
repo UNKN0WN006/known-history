@@ -7,6 +7,11 @@ document.getElementById('app').textContent = 'History RecALI — popup';
   const listEl = document.getElementById('history-list');
   const summaryResultEl = document.getElementById('summary-result');
 
+  if (!statusEl || !btn || !listEl || !summaryResultEl) {
+    console.error('Missing required elements:', { statusEl, btn, listEl, summaryResultEl });
+    return;
+  }
+
   // Tab switching
   document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -145,4 +150,5 @@ document.getElementById('app').textContent = 'History RecALI — popup';
 
   btn.addEventListener('click', summarizeCurrent);
   loadHistory();
+  statusEl.textContent = 'Ready to capture';
 })();
