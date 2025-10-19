@@ -1,5 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from backend.services import gemini
+import os
 
 app = FastAPI(title="LifeLens Backend")
 
@@ -14,4 +16,8 @@ class SummarizeRequest(BaseModel):
 
 @app.post("/summarize")
 async def summarize(req: SummarizeRequest):
-    return {"summary": "placeholder summary"}
+    try:
+        summary = gemini.summarize_text(req.snippet)
+        return {"summary": summary}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
