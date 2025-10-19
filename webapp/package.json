@@ -1,5 +1,5 @@
 {
-  "name": "lifelens-webapp",
+  "name": "history-recali-webapp",
   "version": "0.1.0",
   "private": true,
   "scripts": { "start": "echo start webapp" }
