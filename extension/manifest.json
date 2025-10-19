@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "LifeLens AI",
+  "version": "0.1.0",
+  "description": "Privacy-first page summarizer & semantic history",
+  "permissions": ["storage", "scripting", "activeTab"],
+  "host_permissions": ["<all_urls>"],
+  "background": { "service_worker": "background.js" },
+  "action": { "default_popup": "popup/index.html" },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ]
+}
