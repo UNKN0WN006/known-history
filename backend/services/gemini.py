@@ -1,63 +1,41 @@
 import os
-import json
-import requests
-from pathlib import Path
 from dotenv import load_dotenv
 
-# load .env from repo root
-load_dotenv(Path(__file__).resolve().parents[2] / ".env")
-
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-GEMINI_API_URL = os.getenv("GEMINI_API_URL", "https://api.openai.com/v1/responses")
+load_dotenv()
 
 def summarize_text(text: str) -> str:
     """
-    Minimal Gemini proxy. Raises if GEMINI_API_KEY missing.
-    Adapt request/response parsing to the real Gemini API schema if needed.
+    Summarize text using Google Gemini API.
+    Falls back to a simple summary if API key is missing.
     """
-    if not GEMINI_API_KEY:
-        raise RuntimeError("GEMINI_API_KEY not set in .env")
+    api_key = os.getenv("GEMINI_API_KEY")
+    
+    if not api_key:
+        # Fallback for demo purposes
+        sentences = text.split('.')[:3]
+        return '. '.join(s.strip() for s in sentences if s.strip()) + '.'
+    
+    try:
+        import google.generativeai as genai
+        
+        genai.configure(api_key=api_key)
+        
+        # Use the latest stable flash model (fast and efficient)
+        model = genai.GenerativeModel('models/gemini-2.0-flash')
+        
+        prompt = f"""Provide a concise 2-3 sentence summary of the following text:
 
-    headers = {
-        "Authorization": f"Bearer {GEMINI_API_KEY}",
-        "Content-Type": "application/json"
-    }
+{text[:2000]}
 
-    payload = {
-        "model": "gemini-1.5",
-        "input": f"Summarize the following text in 3 short bullet points and provide 3 tags:\n\n{text}"
-    }
-
-    resp = requests.post(GEMINI_API_URL, json=payload, headers=headers, timeout=30)
-    resp.raise_for_status()
-    data = resp.json()
-
-    # best-effort extraction — adapt to real response format
-    summary = None
-    if isinstance(data, dict):
-        # direct fields
-        for key in ("summary", "output", "result", "text"):
-            if key in data and data[key]:
-                summary = data[key]
-                break
-
-        # nested outputs/choices/responses
-        if not summary:
-            for container in ("choices", "outputs", "responses"):
-                items = data.get(container)
-                if isinstance(items, list) and items:
-                    first = items[0]
-                    if isinstance(first, dict):
-                        for tkey in ("text", "content", "output", "response"):
-                            if first.get(tkey):
-                                summary = first.get(tkey)
-                                break
-                        if summary:
-                            break
-
-    if not summary:
-        # fallback: stringify response
-        summary = json.dumps(data, ensure_ascii=False)
-
-    # truncate reasonably for UI
-    return summary if len(summary) <= 2000 else summary[:2000] + "..."
+Summary:"""
+        
+        response = model.generate_content(prompt)
+        return response.text.strip()
+        
+    except ImportError:
+        sentences = text.split('.')[:3]
+        return '. '.join(s.strip() for s in sentences if s.strip()) + '. (Install google-generativeai for AI summaries)'
+    except Exception as e:
+        # Graceful fallback: return first 3 sentences
+        sentences = text.split('.')[:3]
+        return '. '.join(s.strip() for s in sentences if s.strip()) + '.'

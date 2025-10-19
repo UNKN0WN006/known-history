@@ -4,6 +4,9 @@
   const listEl = document.getElementById('history-list');
   const summaryResultEl = document.getElementById('summary-result');
 
+  // Backend URL - try different endpoints
+  const BACKEND_URL = 'http://localhost:8000';
+
   if (!statusEl || !btn || !listEl || !summaryResultEl) {
     console.error('Missing required elements:', { statusEl, btn, listEl, summaryResultEl });
     return;
@@ -60,20 +63,26 @@
 
     try {
       // Get summary
-      const sumRes = await fetch('http://127.0.0.1:8000/summarize', {
+      const sumRes = await fetch(`${BACKEND_URL}/summarize`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: tab.url, title: tab.title, snippet })
       });
+      
+      if (!sumRes.ok) {
+        throw new Error(`Backend returned ${sumRes.status}`);
+      }
+      
       const sumData = await sumRes.json();
       const summary = sumData.summary || 'No summary generated';
 
       // Get trust score
-      const analyzeRes = await fetch('http://127.0.0.1:8000/analyze', {
+      const analyzeRes = await fetch(`${BACKEND_URL}/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: snippet })
       });
+      
       const trustData = await analyzeRes.json();
       const trustScore = trustData.score || 0.5;
       const trustLabel = trustData.label || 'neutral';
@@ -111,8 +120,8 @@
       });
 
     } catch (e) {
-      console.error(e);
-      statusEl.textContent = `Error: ${e.message || 'Connection failed. Is backend running?'}`;
+      console.error('Full error:', e);
+      statusEl.textContent = `Error: ${e.message}. Check if backend is accessible from browser at ${BACKEND_URL}/health`;
       statusEl.className = 'status error';
     }
   }

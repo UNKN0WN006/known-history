@@ -20,6 +20,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+async def root():
+    return {"message": "History RecALI Backend API", "status": "running"}
+
 @app.get("/health")
 async def health():
     return {"status": "ok"}
@@ -45,5 +49,6 @@ async def analyze(req: AnalyzeRequest):
     try:
         from backend.services import gradient
         return gradient.score_content(req.text)
-    except:
+    except Exception as e:
+        # Fallback to mock scoring if gradient service fails
         return {"label": "neutral", "score": 0.5}
